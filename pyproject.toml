@@ -1,0 +1,22 @@
+[project]
+name = "meetnotes"
+version = "0.2.0"
+description = "Local meeting note-taker: record, transcribe, summarize, write to Obsidian"
+requires-python = ">=3.11, <3.15"
+dependencies = [
+    "faster-whisper>=1.0.0",
+    "av<19",  # faster-whisper 1.2.x passes metadata_errors= to av.open, removed in av 19
+    "openai>=1.0.0",
+    "PyQt6>=6.6.0",
+    "tomli-w>=1.0.0",
+]
+
+[project.scripts]
+meetnotes = "meetnotes.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "pytest-qt>=4.0.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
