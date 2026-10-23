@@ -77,6 +77,9 @@ def start_recording(
     out_dir = recordings_dir / timestamp
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    # Recover any orphan .pcm from a crashed previous recording in this session
+    recover_recordings(out_dir)
+
     mic_source = resolve_mic_source(cfg.mic_source)
     system_source = resolve_system_source(cfg.system_source)
 
