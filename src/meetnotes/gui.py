@@ -369,9 +369,13 @@ class MeetNotesGUI(QMainWindow):
     def _process_last(self) -> None:
         from meetnotes.config import Config
         from meetnotes.recordings import last_recording
+        from meetnotes.capture import recover_recordings
         cfg = Config.load()
         rec_dir = Path(cfg.recordings_dir).expanduser()
         last = last_recording(rec_dir)
+        if last is None:
+            recover_recordings(rec_dir)
+            last = last_recording(rec_dir)
         if last is None:
             QMessageBox.warning(self, "No recording", "No recordings found.")
             return

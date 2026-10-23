@@ -87,20 +87,32 @@ class Config:
 
         return cls(**kwargs)
 
-    def save(self, path: Path) -> None:
-        """Save config to TOML file."""
+    def save(self, path: Path | str) -> None:
+        """Save config to TOML file, preserving any custom sections not managed by Config."""
+        path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        sections: dict[str, dict[str, Any]] = {}
+
+        # Read existing TOML to preserve custom sections
+        existing: dict[str, dict[str, Any]] = {}
+        if path.exists():
+            try:
+                import tomllib
+                with open(path, "rb") as f:
+                    existing = tomllib.load(f)
+            except Exception:
+                existing = {}
+
+        # Update managed fields
         for key, value in self.__dict__.items():
             if key in CONFIG_MAP:
                 section, attr = CONFIG_MAP[key]
-                sections.setdefault(section, {})[attr] = value
+                existing.setdefault(section, {})[attr] = value
             else:
-                sections.setdefault(key, {})[key] = value
+                existing.setdefault(key, {})[key] = value
 
         import tomli_w
         with open(path, "wb") as f:
-            tomli_w.dump(sections, f)
+            tomli_w.dump(existing, f)
 
 
 class ConfigError(Exception):

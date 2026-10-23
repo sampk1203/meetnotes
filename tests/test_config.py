@@ -31,6 +31,32 @@ def test_load_fallback_to_defaults():
     assert cfg.vault_path == "~/Documents/Obsidian"
 
 
+def test_save_preserves_custom_sections():
+    """Config.save should preserve custom sections not managed by Config."""
+    import tomllib
+    import tomli_w
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = Path(tmpdir) / "config.toml"
+        cfg = Config.default()
+        cfg.save(path)
+
+        # Add a custom section
+        with open(path, "rb") as f:
+            data = tomllib.load(f)
+        data["custom_section"] = {"key": "value"}
+        with open(path, "wb") as f:
+            tomli_w.dump(data, f)
+
+        # Save again via Config
+        cfg.save(path)
+
+        # Custom section should survive
+        with open(path, "rb") as f:
+            data = tomllib.load(f)
+        assert data["custom_section"]["key"] == "value"
+        assert data["llm"]["chunk_chars"] == 12000
+
+
 def test_llm_chunk_chars_validation():
     """llm_chunk_chars must be between 1000 and 100000."""
     with tempfile.TemporaryDirectory() as tmpdir:

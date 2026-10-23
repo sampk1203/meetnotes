@@ -13,7 +13,7 @@ from meetnotes.capture import (
     recover_recordings,
     start_recording,
 )
-from meetnotes.audio_devices import list_sources_for_cli as list_sources
+from meetnotes.audio_devices import list_sources_for_cli
 
 
 def test_list_sources_mocked():
@@ -29,7 +29,7 @@ def test_list_sources_mocked():
                 ),
             }.get(tuple(cmd), "")
 
-            sources = list_sources()
+            sources = list_sources_for_cli()
             assert len(sources) == 2
             assert any(s["auto"] for s in sources)
 
