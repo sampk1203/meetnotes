@@ -259,23 +259,11 @@ class MeetNotesGUI(QMainWindow):
 
     def _save_device_selection(self) -> None:
         from meetnotes.config import Config
-        import tomli_w
-        # Use cached config from _load_devices if available to avoid double-read
         cfg = self._cfg if hasattr(self, "_cfg") else Config.load()
         cfg.mic_source = self._mic_combo.currentData() or cfg.mic_source
         cfg.system_source = self._sys_combo.currentData() or cfg.system_source
         cfg_path = Path.home() / ".config" / "meetnotes" / "config.toml"
-        data: dict = {}
-        if cfg_path.exists():
-            with open(cfg_path, "rb") as f:
-                import tomllib
-                data = tomllib.load(f)
-        data.setdefault("audio", {})
-        data["audio"]["mic_source"] = cfg.mic_source
-        data["audio"]["system_source"] = cfg.system_source
-        cfg_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(cfg_path, "wb") as f:
-            tomli_w.dump(data, f)
+        cfg.save(cfg_path)
 
     def _start_meters(self) -> None:
         from meetnotes.levels import DualLevelMeter

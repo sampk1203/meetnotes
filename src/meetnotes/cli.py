@@ -55,7 +55,7 @@ def _cmd_sources(_args: argparse.Namespace) -> int:
 
 
 def _cmd_start(args: argparse.Namespace) -> int:
-    """Start recording with GUI (launches Obsidian if needed)."""
+    """Record and process a meeting. With --no-gui, runs headless CLI mode."""
     if not args.no_gui:
         import subprocess
         from meetnotes.gui import run_gui

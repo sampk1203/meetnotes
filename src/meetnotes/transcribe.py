@@ -17,23 +17,19 @@ class Segment:
 
 # torch is a transitive dep via faster-whisper; import lazily to avoid
 # MissingModule errors when tests run in environments without GPU deps.
-_torch: Any = None
-
-
-def _get_torch() -> Any:
-    global _torch
-    if _torch is None:
-        try:
-            import torch as _t
-            _torch = _t
-        except ImportError:
-            _torch = False
-    return _torch
+_cuda_cache: bool | None = None
 
 
 def _cuda_available() -> bool:
-    t = _get_torch()
-    return t is not False and getattr(t, "cuda", None) is not None and t.cuda.is_available()
+    global _cuda_cache
+    if _cuda_cache is not None:
+        return _cuda_cache
+    try:
+        import torch
+        _cuda_cache = bool(torch.cuda.is_available())
+    except Exception:
+        _cuda_cache = False
+    return _cuda_cache
 
 
 def resolve_device(cfg: Any) -> tuple[str, str]:

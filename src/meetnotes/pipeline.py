@@ -22,6 +22,12 @@ def run_pipeline(
 
     If keep_audio is False (default), deletes WAV files after successful run.
     """
+    # Validate input files
+    if not mic_path.exists():
+        raise RuntimeError(f"Microphone audio file not found: {mic_path}")
+    if system_path is not None and not system_path.exists():
+        raise RuntimeError(f"System audio file not found: {system_path}")
+
     # Load model once for both tracks to save VRAM and time (4 GB constraint)
     from meetnotes.transcribe import resolve_device
     device, compute_type = resolve_device(cfg)

@@ -24,9 +24,11 @@ CONFIG_MAP: dict[str, tuple[str, str]] = {
     "llm_api_key_env": ("llm", "api_key_env"),
     "llm_model": ("llm", "model"),
     "llm_chunk_chars": ("llm", "chunk_chars"),
-    "gui_theme": ("gui", "theme"),
-    "window_picker_timeout": ("gui", "window_picker_timeout"),
 }
+
+
+# Audio sample rate used by capture, levels, and transcribe
+SAMPLE_RATE = 16000
 
 
 @dataclass
@@ -46,8 +48,6 @@ class Config:
     llm_api_key_env: str = "MEETNOTES_API_KEY"
     llm_model: str = "CHANGE_ME"
     llm_chunk_chars: int = 12000
-    gui_theme: str = "dark"
-    window_picker_timeout: int = 15
 
     @classmethod
     def default(cls) -> "Config":
@@ -78,6 +78,13 @@ class Config:
                 kwargs[field_name] = data.get(section, {}).get(attr, default.default)
             else:
                 kwargs[field_name] = data.get(field_name, default.default)
+
+        # Validate llm_chunk_chars
+        chunk_chars = kwargs.get("llm_chunk_chars", 12000)
+        if not isinstance(chunk_chars, int) or chunk_chars < 1000 or chunk_chars > 100000:
+            raise ConfigError(f"llm_chunk_chars must be an integer between 1000 and 100000, got {chunk_chars}")
+        kwargs["llm_chunk_chars"] = chunk_chars
+
         return cls(**kwargs)
 
     def save(self, path: Path) -> None:

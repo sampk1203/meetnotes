@@ -36,7 +36,8 @@ def test_list_sources_mocked():
 
 class _FakeProc:
     def __init__(self, _args, stdout=None):
-        stdout.write(b"x")
+        # Write 200 frames of silence (s16le mono = 400 bytes)
+        stdout.write(b"\x00\x00" * 200)
         stdout.flush()
         self._alive = True
 
@@ -175,14 +176,8 @@ def test_start_recording_convert_pcm_to_wav(tmp_path):
     assert system.stat().st_size > 0
 
 
-def test_start_recording_empty_wav_valid(tmp_path):
-    """start_recording should produce valid (but 0-frame) WAV even when no audio captured.
-
-    The new architecture writes raw PCM then wraps it as WAV via stdlib wave. Even with
-    zero bytes of PCM, the resulting WAV has a valid 44-byte header and passes the
-    non-empty-file check. This is correct: downstream (faster-whisper) handles 0-duration
-    audio gracefully.
-    """
+def test_start_recording_empty_wav_raises(tmp_path):
+    """start_recording raises when recordings capture zero audio frames."""
     cfg = SimpleNamespace(
         recordings_dir=str(tmp_path), mic_source="mic", system_source="sys.monitor"
     )
@@ -207,14 +202,5 @@ def test_start_recording_empty_wav_valid(tmp_path):
     with patch("meetnotes.audio_devices.get_audio_devices", return_value=fake_devices), patch(
         "meetnotes.audio_devices.shutil.which", return_value="/usr/bin/x"
     ), patch("meetnotes.capture.subprocess.Popen", _EmptyProc):
-        mic, system = start_recording(cfg)
-
-    assert mic.suffix == ".wav"
-    assert system.suffix == ".wav"
-    assert mic.stat().st_size > 0  # WAV header
-    assert system.stat().st_size > 0
-    # Verify they are valid WAVs
-    import wave
-    with wave.open(str(mic), "rb") as w:
-        assert w.getnchannels() == 1
-        assert w.getnframes() == 0
+        with pytest.raises(RuntimeError, match="Empty recording"):
+            start_recording(cfg)

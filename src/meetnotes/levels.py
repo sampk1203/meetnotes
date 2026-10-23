@@ -4,9 +4,10 @@ import queue
 import subprocess
 import threading
 import time
-from typing import Any
 
 import numpy as np
+
+from meetnotes.config import SAMPLE_RATE
 
 
 class LevelMeter:
@@ -20,7 +21,7 @@ class LevelMeter:
     ATTACK_TIME = 0.01  # 10 ms fast attack
     DECAY_TIME = 0.5   # 500 ms slow decay
 
-    def __init__(self, source: str, sample_rate: int = 16000, chunk_ms: int = 50):
+    def __init__(self, source: str, sample_rate: int = SAMPLE_RATE, chunk_ms: int = 50):
         self.source = source
         self.sample_rate = sample_rate
         self.chunk_ms = chunk_ms

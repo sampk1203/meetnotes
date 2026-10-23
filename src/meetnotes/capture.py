@@ -15,6 +15,7 @@ from meetnotes.audio_devices import (
     resolve_mic_source,
     resolve_system_source,
 )
+from meetnotes.config import SAMPLE_RATE
 
 
 def list_sources() -> list[dict[str, Any]]:
@@ -29,7 +30,7 @@ def _build_parec_args(source: str) -> list[str]:
         "parec",
         "--device", source,
         "--format", "s16le",
-        "--rate", "16000",
+        "--rate", str(SAMPLE_RATE),
         "--channels", "1",
         "--raw",
     ]
@@ -40,7 +41,7 @@ def _pcm_to_wav(pcm_path: Path, wav_path: Path) -> None:
     with wave.open(str(wav_path), "wb") as wav:
         wav.setnchannels(1)
         wav.setsampwidth(2)  # s16le
-        wav.setframerate(16000)
+        wav.setframerate(SAMPLE_RATE)
         with open(pcm_path, "rb") as f:
             while chunk := f.read(8192):
                 wav.writeframes(chunk)
@@ -136,8 +137,9 @@ def start_recording(
     _pcm_to_wav(mic_pcm, mic_path)
     _pcm_to_wav(system_pcm, system_path)
 
-    # Verify recordings are non-empty
+    # Verify recordings are non-empty (check duration, not file size — WAV header is 44 bytes)
     for p in (mic_path, system_path):
-        if p.stat().st_size == 0:
-            raise RuntimeError(f"Empty recording at {p} — audio device may not be available")
+        with wave.open(str(p), "rb") as w:
+            if w.getnframes() == 0:
+                raise RuntimeError(f"Empty recording at {p} — audio device may not be available")
     return mic_path, system_path
