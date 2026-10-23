@@ -96,11 +96,14 @@ def _chunk_text(text: str, max_chars: int) -> list[str]:
     if current_lines:
         chunks.append("\n".join(current_lines))
     # Hard-split any chunk that still exceeds max_chars (single oversized segment).
-    # Prefix continuations with a fake timestamp so LLM sees consistent format.
+    # Split at word boundary to avoid fake timestamp prefix.
     result: list[str] = []
     for chunk in chunks:
         while len(chunk) > max_chars:
-            result.append(chunk[:max_chars])
-            chunk = "[0.0-0.0] " + chunk[max_chars:]
+            split_idx = chunk.rfind(" ", 0, max_chars)
+            if split_idx == -1:
+                split_idx = max_chars
+            result.append(chunk[:split_idx])
+            chunk = chunk[split_idx:].lstrip()
         result.append(chunk)
     return result

@@ -5,7 +5,7 @@ Record a call (mic + system audio) -> transcribe on GPU -> summarize via LLM API
 
 Target platforms: **Linux only** (Ubuntu 26.04, PipeWire/pipewire-pulse). NVIDIA RTX 3050 4 GB VRAM laptop. Python >= 3.11, `uv` project, src layout, package name `meetnotes`, console script `meetnotes`.
 
-GUI: dark-mode desktop app (PyQt6) with window-picker overlay for selecting which application window to focus audio capture on. Audio capture is OS-level (mic + full system output via pipewire-pulse), not app-specific — window picker is metadata only (tags the recording session for naming/context).
+GUI: dark-mode desktop app (PyQt6). Audio capture is OS-level (mic + full system output via pipewire-pulse), not app-specific. Window picker is deferred (metadata only; does not affect audio routing).
 
 ---
 
@@ -67,7 +67,6 @@ chunk_chars = 12000
 
 [gui]
 theme = "dark"
-window_picker_timeout = 15         # seconds to pick a window
 ```
 
 ---
@@ -87,8 +86,6 @@ Recording parameters: 16 kHz mono WAV (`format=s16le`, `rate=16000`, `channels=1
 `start` records until Ctrl+C (SIGINT) or GUI stop button, shuts down processes/devices cleanly so WAV headers are finalised. A single stop signal ends both tracks.
 
 Output: `<recordings_dir>/<YYYY-MM-DD_HHMM>/mic.wav` and `system.wav`.
-
-**Window picker (GUI only):** After pressing "Record" in the GUI, show an overlay cursor that lets the user click on a window to tag it as the "focus" of the session (for later metadata/naming). Audio capture is always OS-level (mic + full system output) regardless.
 
 Bluetooth/earphone switching mid-call changes the sink — document as a known limitation.
 
@@ -129,7 +126,6 @@ Bluetooth/earphone switching mid-call changes the sink — document as a known l
 - Main window: "Record" / "Stop" button, current status, recording timer, save-to path display.
 - "Sources" button opens a dialog to choose mic and system audio devices.
 - "Settings" button opens a dialog bound to `~/.config/meetnotes/config.toml`.
-- Window picker: clicking "Pick Window" starts a cross-platform window enumerator (Linux: `xdotool search`, Windows: `ctypes` Win32 `EnumWindows`, macOS: ` Quartz.CGWindowListCopyWindowInfo`); user clicks a window to tag it.
 - Dark mode theme applied globally via `QApplication.setStyle("Fusion")` + custom palette (no `native` style for consistency).
 - The GUI wraps the CLI pipeline — internally calls `meetnotes start --no-llm` and then runs the post-capture steps programmatically.
 
@@ -141,7 +137,7 @@ Bluetooth/earphone switching mid-call changes the sink — document as a known l
 2. **Transcribe.** `download-model`, `process` with `--no-llm`, track labelling and merge, device auto-resolution, tests (fake the model).
 3. **Summarize.** Chunking, map-reduce, retries, tests (fake the LLM client).
 4. **Capture.** `start`, clean shutdown, source discovery, tests (fake subprocess), README section on audio routing and limitations.
-5. **GUI.** Dark-mode PyQt6 app, window picker, wiring to the CLI pipeline.
+5. **GUI.** Dark-mode PyQt6 app, wiring to the CLI pipeline.
 6. **Polish.** Error messages, `keep_audio`, install via `uv tool install .`.
 
 ---
@@ -160,7 +156,7 @@ Bluetooth/earphone switching mid-call changes the sink — document as a known l
 
 ## Out of scope for v1
 
-Live (streaming) transcription, speaker diarization beyond Me/Others, auto-detecting calls, speaker-bleed dedupe, Windows/macOS.
+Live (streaming) transcription, speaker diarization beyond Me/Others, auto-detecting calls, speaker-bleed dedupe, Windows/macOS, window picker.
 
 ---
 

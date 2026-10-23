@@ -42,9 +42,9 @@ def _cmd_init(args: argparse.Namespace) -> int:
 
 def _cmd_sources(_args: argparse.Namespace) -> int:
     """List available PulseAudio/PipeWire sources."""
-    from meetnotes.capture import list_sources
+    from meetnotes.audio_devices import list_sources_for_cli
     try:
-        sources = list_sources()
+        sources = list_sources_for_cli()
     except FileNotFoundError as exc:
         print(f"pulseaudio not found: {exc}", file=sys.stderr)
         return 2

@@ -50,6 +50,10 @@ class MeetNotesGUI(QMainWindow):
         self._loaders: tuple[Any, None] = (None, None)
         self._no_signal_warns: dict[str, QLabel | None] = {"mic": None, "system": None}
         self._setup_ui()
+        # Centralized recovery of any orphan .pcm from previous crashes
+        from meetnotes.config import Config
+        from meetnotes.capture import recover_recordings
+        recover_recordings(Path(Config.load().recordings_dir))
         self._start_meters()
         atexit.register(self._cleanup_at_exit)
 
@@ -59,9 +63,6 @@ class MeetNotesGUI(QMainWindow):
             self._stop_event.set()
             if self._worker_thread is not None:
                 self._worker_thread.join(timeout=5)
-            from meetnotes.config import Config
-            from meetnotes.capture import recover_recordings
-            recover_recordings(Path(Config.load().recordings_dir))
         self._stop_meters()
 
     def closeEvent(self, event: Any) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
@@ -368,13 +369,9 @@ class MeetNotesGUI(QMainWindow):
     def _process_last(self) -> None:
         from meetnotes.config import Config
         from meetnotes.recordings import last_recording
-        from meetnotes.capture import recover_recordings
         cfg = Config.load()
         rec_dir = Path(cfg.recordings_dir).expanduser()
         last = last_recording(rec_dir)
-        if last is None:
-            recover_recordings(rec_dir)
-            last = last_recording(rec_dir)
         if last is None:
             QMessageBox.warning(self, "No recording", "No recordings found.")
             return
@@ -402,13 +399,13 @@ class MeetNotesGUI(QMainWindow):
         subprocess.Popen(["xdg-open", str(rec_dir)])
 
     def _show_sources(self) -> None:
-        from meetnotes.capture import list_sources
+        from meetnotes.audio_devices import list_sources_for_cli
         dialog = QDialog(self)
         dialog.setWindowTitle("Audio Sources")
         dialog.setMinimumWidth(500)
         lay = QVBoxLayout(dialog)
         lw = QListWidget()
-        for src in list_sources():
+        for src in list_sources_for_cli():
             auto = " [AUTO]" if src.get("auto") else ""
             lw.addItem(f"{src['name']}{auto}\n   {src.get('description', '')}")
         lay.addWidget(lw)

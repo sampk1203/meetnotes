@@ -11,16 +11,10 @@ from typing import Any
 
 from meetnotes.audio_devices import (
     _check_pactl,
-    list_sources_for_cli,
     resolve_mic_source,
     resolve_system_source,
 )
 from meetnotes.config import SAMPLE_RATE
-
-
-def list_sources() -> list[dict[str, Any]]:
-    """Legacy CLI compatibility: list sources with 'auto' flag."""
-    return list_sources_for_cli()
 
 
 def _build_parec_args(source: str) -> list[str]:
@@ -82,9 +76,6 @@ def start_recording(
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     out_dir = recordings_dir / timestamp
     out_dir.mkdir(parents=True, exist_ok=True)
-
-    # Recover any orphan .pcm from a previous crash
-    recover_recordings(out_dir)
 
     mic_source = resolve_mic_source(cfg.mic_source)
     system_source = resolve_system_source(cfg.system_source)

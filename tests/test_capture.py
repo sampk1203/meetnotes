@@ -10,10 +10,10 @@ import pytest
 from meetnotes.capture import (
     _build_parec_args,
     _pcm_to_wav,
-    list_sources,
     recover_recordings,
     start_recording,
 )
+from meetnotes.audio_devices import list_sources_for_cli as list_sources
 
 
 def test_list_sources_mocked():
