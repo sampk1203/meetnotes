@@ -35,10 +35,11 @@ def test_list_sources_mocked():
 
 
 class _FakeProc:
-    def __init__(self, _args, stdout=None):
+    def __init__(self, _args, stdout):
         # Write 200 frames of silence (s16le mono = 400 bytes)
-        stdout.write(b"\x00\x00" * 200)
-        stdout.flush()
+        if stdout is not None:
+            stdout.write(b"\x00\x00" * 200)
+            stdout.flush()
         self._alive = True
 
     def poll(self):
@@ -146,9 +147,10 @@ def test_start_recording_convert_pcm_to_wav(tmp_path):
     )
 
     class _ExitImmediatelyProc:
-        def __init__(self, args, stdout=None):
-            stdout.write(b"\x00\x00" * 10)
-            stdout.flush()
+        def __init__(self, args, stdout):
+            if stdout is not None:
+                stdout.write(b"\x00\x00" * 10)
+                stdout.flush()
 
         def poll(self):
             return 0  # exits immediately

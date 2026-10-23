@@ -99,7 +99,8 @@ class Config:
                 import tomllib
                 with open(path, "rb") as f:
                     existing = tomllib.load(f)
-            except Exception:
+            except (tomllib.TOMLDecodeError, OSError):
+                # Config file unreadable — start fresh but don't silently overwrite
                 existing = {}
 
         # Update managed fields
